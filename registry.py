@@ -26,9 +26,20 @@ able to be called either with the arguments specified or with just
 the event.
 '''
 
-import six
+import inspect
+import common
 
-def arg_info
+class ArgInfo():
+    @attributes
+    def __init__(self, args, defaults, varargs=None, keywords=None):
+            pass
+
+def arginfo(function, _ugly=False):
+    try:
+        argspec = inspect.getargspec(function)
+    except:
+        return None
+    vars = common.deindex(argspec.args)
 
 
 def factory(function, registry, **aliases):

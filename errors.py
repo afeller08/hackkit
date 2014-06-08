@@ -1,3 +1,8 @@
+'''Some basic errors I like'''
+
+class CatchMe(Exception):
+    '''Throw manually to force something to rollback before continuing.'''
+    pass
 
 class Base(Exception):
     def __new__(cls, class_, val, method, message):

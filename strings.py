@@ -1,6 +1,6 @@
-import Bases
+import bases
 import string
-import Sets
+import sets
 
 class Set(Sets.Set):
     pass
@@ -25,4 +25,4 @@ class CursoryGlance(Object):
             punctChars = Set(s.whitespace + s.punctuation) - '_'
         if not hasattr('__call__', punctChars):
             punctChars = Set(punctChars)
-        self.isPunctChar = punctChars
+        self.ispunctchar = punctChars

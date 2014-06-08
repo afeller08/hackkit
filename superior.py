@@ -1,78 +1,89 @@
-''' Implements a decorator for improving the syntax of super.
+'''Implement a proxy for super that can be operated on.
 
-I find the following syntax hard to read:
+I find the following syntax cumbersome:
 class Word(str):
     def __add__(self, other):
         return super(Word, self).__add__(' ' + other)
 
-I'd much rather use:
-@superior.super
-class Word(str):
-    def __add__(self, other):
-        return self.super[Word] + (' ' + other)
+I'm implemting am alternative such that 
 
-We need to use getitem instead of a function call, because assigning to
-a function call is invalid.  super is, in my opinion, deficient at
-dealing with in place operations due to handling of NotImplemented.
-If I'm improving super, I especially want to support things like
+superior.super(Word, self) + whatever
 
-self.super[Word] += ' ' + other
+is valid code.  It is intended tp be used with the kind of decorators
+found in the registry so that the following sentax would be supported.
 
-I wrote this handler to support the second kind of syntax.
+@registry.subclass
+class Subclass(Base):
+    def __add__(self, super, other):
+        return  super + Subclass(other)
+    def __imul__(self, super, other):
+        super *= Subclass(other)
+        return self
+    def __sub__(self, other):
+        return self.something_inherited - self.preprocess(other)
 '''
 
-# N.B.  This file is not meant to serve as a reference for what good code
-# should look like.  I wrote it because I wanted to make other code more
-# readable.  I expect to use it more often than I use any other module
-# I've ever written because it kills what has always been my biggest
-# annoyance with Python.  The only circumstance under which I ever expect
-# to edit this file is to improve memoization, or make it Python3
-# compatible.
 
-import weakref
 
-def _TCCMetaclass(name, bases, dict):
-    '''Create the new super proxy'''
-    object = dict['object']
+def enable_proxy(attr):
+    '''If attr is a method, transform its first argument to arg.proxy.
+    
+    Used as a decorator for methods in proxy objects.
+    '''
+    if not callable(attr):
+        return attr
+
+    def proxy_method(self, *args, **kwargs):
+        return attr(self.proxy, *args, **kwargs)
+
+    return proxy_method
+
+
+def _MakeProxy(name, bases, dict):
+    '''Create the new proxy for super. Use as a metaclass.'''
+    # cls is the object's class. class_ is the method's class.
+    # If they are not equal, cls is a superclass of class_.
+    cls = dict['cls'] 
     class_ = dict['class_']
-    d = {}
+    source = super(class_, cls)
+    d = {'__metaclass__': _MakeProxy}
     # __getattribute__ and subclassing dict don't work.
     for attr in class_.__dict__:
         try:
-            d[attr] = getattr(super(class_, object), attr)
+            d[attr] = enable_proxy(getattr(source, attr))
         except AttributeError:
             pass
     return type(name, bases, d)
 
-    
-class _SuperDelegator(object):
+
+
+_memoizations = {}
+
+
+def superproxy(class_, instance, memoize=True):
     '''Delegate and memoize the creation of the super proxy'''
-    memory = {}
-    
-    def __init__(self, object, memoize=True):
-        self.object = object
-        self.memoize = memoize
+    cls = instance.__class__
+    description = (class_, cls) # Needed for SuperProxy
+    Proxy = None
+    if memoize:
+        try:
+            Proxy = _memoizations[description]
+        except KeyError:
+            pass
+    if Proxy is None:
 
-    def __getitem__(self, class_):
-        '''Delegate the creation of the super proxy'''
-        memoize = self.memoize
-        instance = (class_, self.object)
+        # Create one class per (subclass, superclass) pair
+        class SuperProxy(object):
+            __metaclass__ = _MakeProxy
+            class_ = description[0] 
+            cls = description[1]
+
+        Proxy = SuperProxy
         if memoize:
-            try:
-                return _Metaclass.memory[instance]
-            except KeyError:
-                pass
-
-        #Create one class per instance
-        class TightlyCoupledClass(object):
-            __metaclass__ = _TCCMetaclass
-            class_ = instance[0] 
-            object = instance[1]
-
-        attribute = TightlyCoupledClass()
-        if memoize:
-            _Metaclass.memory[instance] = weakref.ref(attribute)
-        return attribute
+            _memoizations[description] = Proxy 
+    proxy = Proxy()
+    proxy.proxy = instance
+    return proxy
 
     
 
@@ -91,13 +102,11 @@ def superior(cls, memoize=True):
 
 TESTING = True
 if TESTING:
-    @superior
     class Test(int):
         def __add__(self, other):
-            #Have to cast because ints are optimized in a way that prevents
-            #them from 
-            return Test(self.super[Test] + (other + 1))
-        def __iadd__
+            # Have to cast because ints are primative and
+            # don't update their subclasses.
+            return superproxy(Test, self) + (other + 1)
 
     t = Test(3) + 3 
     if t == 7:
