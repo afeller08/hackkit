@@ -12,7 +12,7 @@ superior.super(Word, self) + whatever
 is valid code.  It is intended tp be used with the kind of decorators
 found in the registry so that the following sentax would be supported.
 
-@registry.subclass
+@superior.subclass
 class Subclass(Base):
     def __add__(self, super, other):
         return  super + Subclass(other)
@@ -22,7 +22,8 @@ class Subclass(Base):
     def __sub__(self, other):
         return self.something_inherited - self.preprocess(other)
 '''
-
+import inspect
+import common
 
 
 def enable_proxy(attr):
@@ -86,18 +87,28 @@ def superproxy(class_, instance, memoize=True):
     return proxy
 
     
+def _wrapself(method, name, cls, position, memoize):
+    '''Decorate method to have super(cls, self) at position.'''
+    start = position
+    position = max(position, 1)
+    def wrapper(*args, **kwargs):
+        self = args[0]
+        args[start:position] = [superproxy(cls, self, memoize)] 
+        return method(*args, **kwargs)
+    wrapper.__name__ = name
+    return wrapper
+        
 
-def superior(cls, memoize=True):
-    '''Add attribute super to a class.
-    Optional parameter to turn off memoization.
-    '''
-    def init(self, *args):
-        val = super(cls, self).__init__(*args)
-        self.super = _SuperDelegator(self, memoize)
-        return val
-
-    cls.__init__  = init
+def subclass(cls, memoize=True):
+    for var in vars(cls):
+        method = cls.var
+        if callable(method):
+            argspec = common.deindex(inspect.getargspec(var))
+            if 'super' in argspec:
+                _wrapself(method, var, cls, argspec[super], memoize)
     return cls
+
+
 
 
 TESTING = True
