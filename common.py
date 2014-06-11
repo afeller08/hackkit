@@ -1,5 +1,8 @@
 '''Some core utilities I routinely use.'''
 
+def attr(obj, attribute):
+    return object.__getattribute__(obj, attribute)
+
 def deindex(iterable):
     '''Return a dict mapping the values to the keys of the iterable.'''
     result = {}
@@ -28,20 +31,20 @@ class Accessor(object):
     def __init__(self, previous=False, args=None, method=None):
         self.chain = ()
         if previous:
-            chain = object.__getattr__(previous, 'chain')
+            chain = attr(previous, 'chain')
             self.chain = ((args, method),) + chain
 
     def __getitem__(self, item):
         return Accessor(self, item, Accessor.ITEM)
 
-    def __getattr__(self, attr):
+    def __getattribute__(self, attr):
         return Accessor(self, attr, Accessor.ATTR)
 
     def __call__(self, *args, **kwargs):
         return Accessor(self, (args, kwargs), Accessor.CALL)
 
     def access(self, obj):
-        chain = object.__getattr__(self, 'chain')
+        chain = attr(self, 'chain')
         for (item, method) in chain:
             if method == Accessor.ITEM:
                 obj = obj[item]

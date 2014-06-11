@@ -64,7 +64,7 @@ _memoizations = {}
 def superproxy(class_, instance, memoize=True):
     '''Delegate and memoize the creation of the super proxy'''
     cls = instance.__class__
-    description = (class_, cls) # Needed for SuperProxy
+    description = (class_, cls)  # Needed for SuperProxy
     Proxy = None
     if memoize:
         try:
@@ -93,19 +93,42 @@ def _wrapself(method, name, cls, position, memoize):
     position = max(position, 1)
     def wrapper(*args, **kwargs):
         self = args[0]
-        args[start:position] = [superproxy(cls, self, memoize)] 
+        proxy = superproxy(cls, self, memoize)
+        args = args[:start] + (proxy,) + args[position:] 
         return method(*args, **kwargs)
     wrapper.__name__ = name
     return wrapper
         
 
+def _wrapmethod(method, attr, cls, position):
+    '''Decorate method to have super(cls, self).attr at position.'''
+    start = position
+    position = max(position, 1)
+    def wrapper(*args, **kwargs):
+        self = args[0]
+        proxy = super(cls, self)
+        proxymethod = getattr(proxy, attr)
+        args = args[:start] + (proxymethod,) + args[position:] 
+        return method(*args, **kwargs)
+    wrapper.__name__ = attr
+    return wrapper
+        
+
 def subclass(cls, memoize=True):
-    for var in vars(cls):
-        method = cls.var
+    for attr in vars(cls):
+        method = getattr(cls, attr)
         if callable(method):
-            argspec = common.deindex(inspect.getargspec(var))
-            if 'super' in argspec:
-                _wrapself(method, var, cls, argspec[super], memoize)
+            print(method)
+            argspec = common.deindex(inspect.getargspec(method).args)
+            proxy = None
+            index = 0
+            if 'superior' in argspec:
+                index = argspec['superior']
+                method = _wrapself(method, attr, cls, index, memoize)
+            if 'sup' in argspec:
+                index = argspec['sup']
+                method = _wrapmethod(method, attr, cls, index)
+            setattr(cls, attr, method)
     return cls
 
 
@@ -113,11 +136,13 @@ def subclass(cls, memoize=True):
 
 TESTING = True
 if TESTING:
+    @subclass
     class Test(int):
-        def __add__(self, other):
+        def __add__(sup, other):
             # Have to cast because ints are primative and
             # don't update their subclasses.
-            return superproxy(Test, self) + (other + 1)
+            print(sup)
+            return Test(sup(other + 1))
 
     t = Test(3) + 3 
     if t == 7:
