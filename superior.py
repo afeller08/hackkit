@@ -108,6 +108,7 @@ def _wrapmethod(method, attr, cls, position):
         self = args[0]
         proxy = super(cls, self)
         proxymethod = getattr(proxy, attr)
+        print proxymethod
         args = args[:start] + (proxymethod,) + args[position:] 
         return method(*args, **kwargs)
     wrapper.__name__ = attr
