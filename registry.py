@@ -25,22 +25,41 @@ and passed to my function.  Ideally, the resulting function will be
 able to be called either with the arguments specified or with just
 the event.
 '''
-
+from collections import namedtuple
 import inspect
+
 import common
 
-class ArgInfo():
-    @attributes
-    def __init__(self, args, defaults, varargs=None, keywords=None):
-            pass
+ArgInfo = namedtuple(
+    'ArgInfo',
+    ['args', 'defaults', 'varargs', 'keywords']
+)
 
-def arginfo(function, _ugly=False):
+
+
+
+def arginfo(function):
     try:
         argspec = inspect.getargspec(function)
     except:
         return None
-    vars = common.deindex(argspec.args)
+    args = common.deindex(argspec.args)
+    defaults = argspec.defaults
+    defaults = [common.ignore] * (len(args) - len(defaults)) + defaults
+    defaults = common.maponto(args, defaults)
+    return ArgInfo(args, defaults, argspec.varargs, argspec.keywords)
 
 
 def factory(function, registry, **aliases):
+    pass
+
+
+def attributes(function):
+    '''Set args[1:] as attributes of args[0].
+
+    Used primarily for __init__.
+    '''
+    mymy = arginfo()
+
+
 
