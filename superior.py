@@ -40,7 +40,7 @@ def enable_proxy(attr):
     return proxy_method
 
 
-def _MakeProxy(name, bases, dict):
+def _MakeProxy(name, bases, dict, type=type):
     '''Create the new proxy for super. Use as a metaclass.'''
     # cls is the object's class. class_ is the method's class.
     # If they are not equal, cls is a superclass of class_.

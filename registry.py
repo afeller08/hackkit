@@ -30,6 +30,22 @@ import inspect
 
 import common
 
+def combine_metaclasses(*metaclasses):
+    '''Chain metaclasses that take a type=type argument
+    
+    '''
+    args = metaclasses
+    metaclass = metaclasses[-1]
+    metaclasses = list(metaclasses[:-1])
+    metaclasses.reverse()
+    for func in metaclasses:
+        #Define metaclass recursively.
+        def metaclass(name, bases, dict, metaclass=metaclass):
+            return func(name, bases, dict, metaclass)
+    metaclass.__doc__ = 'Combined metaclasses of {0}.'.format(args)
+    return metaclass
+
+
 ArgInfo = namedtuple(
     'ArgInfo',
     ['args', 'defaults', 'varargs', 'keywords']

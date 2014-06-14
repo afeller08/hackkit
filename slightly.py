@@ -4,7 +4,7 @@ def sic(func):
     func._hackkit_slightly__sic = True
     return func
 
-def prettier(name, bases, dictionary):
+def prettier(name, bases, dictionary, type=type):
     dict = {}
     for key, value in dictionary.iteritems():
         if key in ops.all:
