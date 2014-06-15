@@ -6,7 +6,7 @@ arith = [
     'and', 'or', 'xor',
 ]
 
-arithmetic =  [ m + op for op in ops for m in ['', 'i', 'r']]
+arithmetic =  [ m + op for op in arith for m in ['', 'i', 'r']]
 
 object = [
     'new', 'init', 'del',
