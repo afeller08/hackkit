@@ -1,7 +1,9 @@
 '''Some core utilities I routinely use.'''
 
+
 def attr(obj, attribute):
     return object.__getattribute__(obj, attribute)
+
 
 def deindex(iterable):
     '''Return a dict mapping the values to the keys of the iterable.'''
@@ -10,7 +12,8 @@ def deindex(iterable):
         iterable = iterable.iteritems()
     for i, value in enumerate(iterable):
         result[value] = i
-    return result 
+    return result
+
 
 class Accessor(object):
     CALL = 0
@@ -59,6 +62,7 @@ class Accessor(object):
                 obj = obj(*args, **kwargs)
         return obj
 
+
 class MRCA():
     __metaclass__ = type
     # TODO: need to override isinstance and issubclass and provide joining
@@ -67,7 +71,7 @@ class MRCA():
 
 def mcra(*objects_or_classes):
     '''Return most recent common ancestor (MCRA) of the inputs.
-    
+
     Given Python's support of complex inheritance patterns, this is
     technically an NP-complete problem (longest common substring on n
     input strings).
@@ -77,13 +81,12 @@ def mcra(*objects_or_classes):
 
     ...needs more thought
 
-    This implementation seeks to produce a 
+    This implementation seeks to produce a
     '''
-    def init(self, object_or_class):
+    def init(self, object_or_class, obj_or_cls):
         cls = object_or_class
         if not isinstance(cls, type):
             cls = cls.__class__
         c = obj_or_cls
         if not isinstance(c, type):
             c = c.__class__
-

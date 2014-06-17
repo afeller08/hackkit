@@ -80,7 +80,6 @@ class Ordered(list):
             return False
         return Ordered(intersection, _sorted=True)
 
-
     setslice = NotImplemented
     setitem = NotImplemented
 

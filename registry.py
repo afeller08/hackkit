@@ -18,7 +18,7 @@ in one module, and
 @registry.event
 def cursorMoved(line, char_index):
     ...
-    
+
 
 in another, and have the correct arguments pulled out of the event
 and passed to my function.  Ideally, the resulting function will be
@@ -30,16 +30,17 @@ import inspect
 
 import common
 
+
 def combine_metaclasses(*metaclasses):
-    '''Chain metaclasses that take a type=type argument
-    
+    '''Chain metaclasses that take a type=type fourth argument.
+
     '''
     args = metaclasses
     metaclass = metaclasses[-1]
     metaclasses = list(metaclasses[:-1])
     metaclasses.reverse()
     for func in metaclasses:
-        #Define metaclass recursively.
+        # Define metaclass recursively.
         def metaclass(name, bases, dict, metaclass=metaclass):
             return func(name, bases, dict, metaclass)
     metaclass.__doc__ = 'Combined metaclasses of {0}.'.format(args)
@@ -50,8 +51,6 @@ ArgInfo = namedtuple(
     'ArgInfo',
     ['args', 'defaults', 'varargs', 'keywords']
 )
-
-
 
 
 def arginfo(function):
@@ -70,12 +69,22 @@ def factory(function, registry, **aliases):
     pass
 
 
+class Registry(object):
+    def __init__(self, **kwargs):
+        self.values = {}
+        self.register(**kwargs)
+        return
+
+    def register(self, **kwargs):
+        '''Create value in registry'''
+        print 'anything'
+        return
+
+
 def attributes(function):
     '''Set args[1:] as attributes of args[0].
 
     Used primarily for __init__.
     '''
     mymy = arginfo()
-
-
-
+    return mymy
