@@ -75,10 +75,34 @@ class Registry(object):
         self.register(**kwargs)
         return
 
+    def _values(self, key, value):
+        self.values[key] = value
+        return
+
     def register(self, **kwargs):
         '''Create value in registry'''
-        print 'anything'
+        for key, v in kwargs.iteritems():
+            if isinstance(v, common.Accessor):
+                self._values(key, lambda v=v: common.Accessor.access(v))
         return
+
+    def __call__(self, method_or_cls):
+        if isinstance(self, type):
+            return self.decorate_cls(method_or_cls)
+        return self.decorate_method(method_or_cls)
+
+    def decorate_cls(self, cls):
+        for attr, method in vars(cls).iteritems():
+            if callable(method):
+                method = self.decorate_method(method, cls)
+                setattr(cls, attr, method)
+        return cls
+
+    def decorate_method(self, method, cls=None):
+        args = arginfo(method)
+        if 'cls' in args.args:
+            method.cls = cls
+        return method
 
 
 def attributes(function):
