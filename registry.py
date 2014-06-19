@@ -25,7 +25,7 @@ and passed to my function.  Ideally, the resulting function will be
 able to be called either with the arguments specified or with just
 the event.
 '''
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 import inspect
 
 import common
@@ -70,9 +70,18 @@ def factory(function, registry, **aliases):
 
 
 class Registry(object):
+    records_functions = True
+    records_classes = False
+    registries = defaultdict(lambda: {})
+
     def __init__(self, **kwargs):
-        self.values = {}
+        self.values = self.registries('values')
         self.register(**kwargs)
+        if self.records_classes:
+            self.classes = self.registries('classes')
+        if self.records_functions:
+            self.functions = self.registries('functions')
+            self.arguments = self.registries('arguments')
         return
 
     def _values(self, key, value):
@@ -84,6 +93,10 @@ class Registry(object):
         for key, v in kwargs.iteritems():
             if isinstance(v, common.Accessor):
                 self._values(key, lambda v=v: common.Accessor.access(v))
+            elif callable(v):
+                self._values(key, v)
+            else:
+                self._values(key, lambda v=v: v)
         return
 
     def __call__(self, method_or_cls):
@@ -91,18 +104,30 @@ class Registry(object):
             return self.decorate_cls(method_or_cls)
         return self.decorate_method(method_or_cls)
 
-    def decorate_cls(self, cls):
+    def decorate_cls(self, cls, name=None):
+        if self.records_classes:
+            if name is None:
+                name = cls.__name__
+            self.classes[name] = cls
         for attr, method in vars(cls).iteritems():
             if callable(method):
                 method = self.decorate_method(method, cls)
                 setattr(cls, attr, method)
         return cls
 
-    def decorate_method(self, method, cls=None):
+    def decorate_method(self, method, name=None, cls=None):
         args = arginfo(method)
         if 'cls' in args.args:
-            method.cls = cls
-        return method
+            method._hackkit_registry__cls = cls
+        if self.records_functions and cls is None:
+            if name is None:
+                name = method.__name__
+            self.functions[name] = method
+            self.arguments[name] = args
+
+        def function(*args, **kwargs):
+            pass
+        return function
 
 
 def attributes(function):
