@@ -66,8 +66,19 @@ class ModeDict(dict):
         self.popmodes.append(popmode)
         self.modes.append(mode)
         for (key, val) in mode.iteritems():
-            k = Const(None)
-            old = self.get(key, k)
-            if old is not k:
+            const = Const(None)
+            old = self.get(key, const)
+            if old is not const:
                 popmode[key] = old
             self[key] = val
+        return
+
+    def pop(self, name=None):
+        mode = self.modes.pop()
+        for key in mode:
+            del self[key]
+        mode = self.popmodes.pop()
+        for key, value in mode.iteritems():
+            self[key] = value
+        if name != self.names.pop() and name is not None:
+            self.pop(name)
