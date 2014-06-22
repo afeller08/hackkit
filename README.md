@@ -1,4 +1,4 @@
-HackKit.py
-==========
+hackkit
+=======
 
 A Python tool chest for metaprogramming 
