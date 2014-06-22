@@ -34,7 +34,7 @@ object = (
     'getattr', 'setattr', 'getattribute', 'delattr',
     'dict', 'slots',
     'class', 'metaclass',
-    'isinstance', 'issubclass',
+    'instancecheck', 'subclasscheck',
     'hash',
     'doc',
     'nonzero',
