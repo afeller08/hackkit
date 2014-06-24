@@ -63,14 +63,17 @@ class Accessor(object):
         return obj
 
 
-class MRCA():
-    __metaclass__ = type
-    # TODO: need to override isinstance and issubclass and provide joining
-    # mechanisms.
+class MRCA_Metaclass(type):
+    def __isinstance__(MRCA, obj):
+        return MRCA.__issubclass__(obj.__class__)
+
+    def __issubclass__(MRCA, cls):
+        ancestor = mrca(MRCA, cls)
+        return ancestor == MRCA
 
 
-def mcra(*objects_or_classes):
-    '''Return most recent common ancestor (MCRA) of the inputs.
+def mrca(*objects_or_classes):
+    '''Return most recent common ancestor (MRCA) of the inputs.
 
     Given Python's support of complex inheritance patterns, this is
     technically an NP-complete problem (longest common substring on n
@@ -83,6 +86,10 @@ def mcra(*objects_or_classes):
 
     This implementation seeks to produce a
     '''
+    class MRCA():
+        __metaclass__ = MRCA_Metaclass
+        _hackkit_MCRA__MRCA = True
+
     def init(self, object_or_class, obj_or_cls):
         cls = object_or_class
         if not isinstance(cls, type):
