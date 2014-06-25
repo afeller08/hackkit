@@ -1,4 +1,5 @@
 '''Some core utilities I routinely use.'''
+import weakref
 
 
 def attr(obj, attribute):
@@ -63,37 +64,59 @@ class Accessor(object):
         return obj
 
 
-class MRCA_Metaclass(type):
+class _MRCA_Metaclass(type):
     def __isinstance__(MRCA, obj):
         return MRCA.__issubclass__(obj.__class__)
 
     def __issubclass__(MRCA, cls):
-        ancestor = mrca(MRCA, cls)
-        return ancestor == MRCA
+        if cls in MRCA.known_subclasses:
+            return True
+        mro = deindex(cls.__mro__)
+        for base in MRCA.bases:
+            if base not in mro:
+                return False
+        for (a, b) in MRCA.basepairs:
+            if mro[b] < mro[a]:
+                return False
+        MRCA.known_subclasses.add(weakref.ref(cls))
+        return True
 
 
-def mrca(*objects_or_classes):
-    '''Return most recent common ancestor (MRCA) of the inputs.
-
-    Given Python's support of complex inheritance patterns, this is
-    technically an NP-complete problem (longest common substring on n
-    input strings).
+def mrca(object_or_class, *objects_or_classes):
+    '''Return most recent common ancestor (MRCA) of the inputs.'''
+    '''
+    Given Python's support of complex inheritance patterns, the obvious
+    approach involves solving an NP-complete problem.
+        (Longest common substring on n input strings)
 
     I seek to produce an implementation that is efficient in the common
     case while remaining correct in the complex case.
 
-    ...needs more thought
+    The biggest efficiency we can gain in the common case is memoization
+    on class.  Very rarely would we test a type against an MRCA only
+    once.  Such uses are likely to be very slow.
 
-    This implementation seeks to produce a
+    One other thing to note is that the mor in python only permits each
+    superclass to show up once in a class's hierarchy.  This allows us
+    to create a complete description of the string simply through pairs
+    (so we are no longer dealing with an NP-complete problem.)
     '''
-    class MRCA():
-        __metaclass__ = MRCA_Metaclass
-        _hackkit_MCRA__MRCA = True
-
-    def init(self, object_or_class, obj_or_cls):
-        cls = object_or_class
+    mrca = object_or_class
+    if not isinstance(mrca, type):
+        mrca = mrca.__class__
+    for cls in objects_or_classes:
         if not isinstance(cls, type):
             cls = cls.__class__
-        c = obj_or_cls
-        if not isinstance(c, type):
-            c = c.__class__
+        if not issubclass(cls, mrca):
+            if not issubclass(mrca, cls):
+                mrca = _createmrca(mrca, cls)
+    return mrca
+
+
+def _createmrca(cls1, cls2):
+    class MRCA():
+        bases = set()
+        base_pairs = set()
+        known_subclasses = set()
+        __metaclass__ = _MRCA_Metaclass
+        _hackkit_MCRA__MRCA = True
