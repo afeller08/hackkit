@@ -2,6 +2,18 @@
 import weakref
 
 
+def subsets(iterable, n):
+    iterable = list(iterable)
+    if n > len(iterable):
+        return []
+    if n == 1:
+        return [(x,) for x in iterable]
+
+
+def _subsets(iterable, n):
+    return
+
+
 def attr(obj, attribute):
     return object.__getattribute__(obj, attribute)
 
@@ -41,13 +53,13 @@ class Accessor(object):
         self.base = base
 
     def __getitem__(self, item):
-        return Accessor(self, None, item, Accessor.ITEM)
+        return self.__class__(self, None, item, Accessor.ITEM)
 
     def __getattribute__(self, attr):
-        return Accessor(self, None, Accessor.ATTR)
+        return self.__class__(self, None, Accessor.ATTR)
 
     def __call__(self, *args, **kwargs):
-        return Accessor(self, None, (args, kwargs), Accessor.CALL)
+        return self.__class__(self, None, (args, kwargs), Accessor.CALL)
 
     def access(self, obj=None):
         chain = attr(self, 'chain')
@@ -114,9 +126,23 @@ def mrca(object_or_class, *objects_or_classes):
 
 
 def _createmrca(cls1, cls2):
-    class MRCA():
-        bases = set()
+    saved = _createmrca.mrcas.get
+    cls = saved((cls1, cls2)) or saved((cls2, cls1))
+    if cls is not None:
+        return cls
+    bases = None
+    if hasattr(cls1, '_hackkit_MRCA__MRCA'):
+        bases = cls1.bases
+    else:
+        bases = set(cls1.__mro__)
+
+    class MRCA(type):
         base_pairs = set()
         known_subclasses = set()
         __metaclass__ = _MRCA_Metaclass
-        _hackkit_MCRA__MRCA = True
+        _hackkit_MRCA__MRCA = True
+    MRCA.bases = bases
+    return MRCA
+
+
+_createmrca.mrcas = {}
