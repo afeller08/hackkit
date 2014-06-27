@@ -125,23 +125,50 @@ def mrca(object_or_class, *objects_or_classes):
     return mrca
 
 
-def _createmrca(cls1, cls2):
+def _createmrca(cls1, cls2, memoize=True):
     saved = _createmrca.mrcas.get
     cls = saved((cls1, cls2)) or saved((cls2, cls1))
     if cls is not None:
         return cls
     bases = None
+    basepairs = None
     if hasattr(cls1, '_hackkit_MRCA__MRCA'):
         bases = cls1.bases
+        basepairs = set(cls1.basepairs)
     else:
         bases = set(cls1.__mro__)
+    if hasattr(cls2, '_hackkit_MRCA__MRCA'):
+        bases &= cls2.bases
+        if basepairs:
+            basepairs &= cls2.basepairs
+    else:
+        bases &= set(cls2.__mro__)
+        if basepairs:
+            source = deindex(cls2.__mro__)
+            for (a, b) in basepairs:
+                aa = source.get(a)
+                bb = source.get(b)
+                if aa is None or bb is None or bb < aa:
+                    basepairs.remove((a, b))
+    if basepairs is None:
+        basepairs = set()
+        bps = subsets(bases, 2)
+        mro1 = deindex(cls1.__mro__)
+        mro2 = deindex(cls2.__mro__)
+        for (a, b) in bps:
+            a1 = mro1[a]
+            b1 = mro1[b]
+            a2 = mro2[a]
+            b2 = mro2[b]
+            if (a1 < b1 and a2 < b2) or (b1 < a1 and b2 < a2):
+                basepairs.add((a, b))
 
     class MRCA(type):
-        base_pairs = set()
         known_subclasses = set()
         __metaclass__ = _MRCA_Metaclass
         _hackkit_MRCA__MRCA = True
     MRCA.bases = bases
+    MRCA.basepairs = basepairs
     return MRCA
 
 
