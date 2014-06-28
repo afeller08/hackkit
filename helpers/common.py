@@ -3,15 +3,28 @@ import weakref
 
 
 def subsets(iterable, n):
-    iterable = list(iterable)
+    subsets = [()]
     if n > len(iterable):
         return []
-    if n == 1:
-        return [(x,) for x in iterable]
+    i = 0
+    while i < n:
+        subsets = cartesian_product(subsets, iterable[i:])
+        i += 1
+    return [demolish(s) for s in subsets]
 
 
-def _subsets(iterable, n):
-    return
+def cartesian_product(aa, bb):
+    return [(a, b) for a in aa for b in bb]
+
+
+def demolish(nested_tuple):
+    out = []
+    if isinstance(nested_tuple, tuple):
+        for x in nested_tuple:
+            out.extend(demolish(x))
+    else:
+        out = (nested_tuple,)
+    return out
 
 
 def attr(obj, attribute):
