@@ -1,8 +1,8 @@
 
-function ||name||(|arg in args|arg, |) {
-    var argnames, i, object;
-    object = {|arg in args|
-            arg = arg,
-        |};
-    }
+function ||name||(callback, id){
+    return function(|args|) {
+        var params;
+        params = {|args|};
+        hackkit_jsonp_handler(||method||, params, id, callback);
+    };
 }
