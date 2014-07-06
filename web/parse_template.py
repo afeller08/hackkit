@@ -1,3 +1,6 @@
+import json
+
+
 _templates = {}
 
 
@@ -11,25 +14,6 @@ def case(func, char):
     return func
 
 
-def jsformat(object):
-    if hasattr(object, 'jsformat'):
-        return object.jsformat()
-    elif isinstance(object, (float, int, str)):
-        return repr(object)
-    elif isinstance(object, unicode):
-        return repr(object)[1:]
-    elif isinstance(object, (set, list, tuple)):
-        list = [jsformat(obj) for obj in object]
-        list[0] = '[' + list[0]
-        list[-1] += ']'
-        return ', '.join(list)
-    elif isinstance(object, dict):
-        # can probably be done better at least for the key.
-        dict = [(jsformat(a), jsformat(b)) for (a, b) in object.iteritems()]
-        dict = ['{0}: {1}'.format(a, b) for (a, b) in dict]
-        return ', '.join(dict)
-
-
 @case('`')
 def _backtick(template, context, i):
     char = ''
@@ -39,7 +23,7 @@ def _backtick(template, context, i):
         char = template[i]
         i += 1
     out = ''.join(out)
-    out = jsformat(context[out])
+    out = json.dumps(context[out])
     return (out, i)
 
 
@@ -65,14 +49,20 @@ def is_ntuple(thing, n):
 def _curly(template, context, i, indent=0):
     keys_values = _gather(template, context, i, ')')
     if isinstance(keys_values, dict):
-        return jsformat(keys_values)
+        return json.dumps(keys_values)
     if isinstance(keys_values, (list, tuple, set)):
         if all([is_ntuple(x, 2) for x in keys_values]):
-            return jsformat(dict(keys_values))
+            return json.dumps(dict(keys_values))
         elif all([isinstance(x, str) for x in keys_values]):
             out = ['{']
             for k in keys_values:
                 out.append('{1}{0}: {0}'.format(k, (indent + 4) * ' '))
+            return ',\n'.join(out)
+
+
+@case("'")
+def _quote(template, context, i):
+    pass
 
 
 def _gather(template, context, i, closing_mark):
