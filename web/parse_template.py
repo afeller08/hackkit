@@ -4,6 +4,13 @@ import json
 _templates = {}
 
 
+def jsformat(thing):
+    if hasattr(thing, '_hackkit__jsformat'):
+        return thing._hackkit__jsformat()
+    else:
+        return json.dumps(thing)
+
+
 def case(func, char):
     '''Extend parse_template by using @case('c').
 
@@ -23,20 +30,20 @@ def _backtick(template, context, i):
         char = template[i]
         i += 1
     out = ''.join(out)
-    out = json.dumps(context[out])
-    return (out, i)
+    out = jsformat(context[out])
+    return out, i
 
 
 @case('(')
 def _paren(template, context, i):
-    params = _gather(template, context, i, ')')
+    (params, i) = _gather(template, context, i, ')')
     out = ['(']
     for x in params:
         if not isinstance(x, basestring):
             raise TypeError("_paren requires strings. TODO: better error")
         out.append(x)
     out.append(')')
-    return ''.join(out)
+    return ''.join(out), i
 
 
 def is_ntuple(thing, n):
@@ -46,23 +53,31 @@ def is_ntuple(thing, n):
 
 
 @case('{')
-def _curly(template, context, i, indent=0):
-    keys_values = _gather(template, context, i, ')')
+def _curly(template, context, i):
+    keys_values, i = _gather(template, context, i, ')')
     if isinstance(keys_values, dict):
-        return json.dumps(keys_values)
+        return jsformat.dumps(keys_values), i
     if isinstance(keys_values, (list, tuple, set)):
         if all([is_ntuple(x, 2) for x in keys_values]):
-            return json.dumps(dict(keys_values))
+            return jsformat(dict(keys_values)), i
         elif all([isinstance(x, str) for x in keys_values]):
             out = ['{']
             for k in keys_values:
-                out.append('{1}{0}: {0}'.format(k, (indent + 4) * ' '))
-            return ',\n'.join(out)
+                out.append('{0}: {0}'.format(k))
+            out.append('}')
+            return ', '.join(out), i
+
+
+@case('[')
+def _square(template, context, i):
+    list, i = _gather(template, context, i, ']')
+    return jsformat(list), i
 
 
 @case("'")
 def _quote(template, context, i):
-    pass
+    out, i = _gather(template, context, i, "'")
+    return json.dumps(jsformat(out)), i
 
 
 def _gather(template, context, i, closing_mark):
@@ -77,7 +92,7 @@ def _gather(template, context, i, closing_mark):
         char = template[i]
     out = ''.join(out)
     out = (context[out])
-    return (out, i)
+    return out, i
 
 
 def parse_template(template, context):
@@ -89,9 +104,9 @@ def parse_template(template, context):
         char = template[i]
         if char == '`':
             if lastlast != '\\' and last != '\\':
-                (segment, i) = _templates[last](template, context, i+1)
+                segment, i = _templates[last](template, context, i+1)
             lastlast = None
-            out += segment
+            out.append(segment)
             last = None
         else:
             i += 1
