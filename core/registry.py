@@ -65,11 +65,26 @@ def arginfo(function):
     return ArgInfo(args, defaults, argspec.varargs, argspec.keywords)
 
 
-def factory(function, registry, **aliases):
-    pass
+class Registry(type):
+    '''
+    Typically, you use in the following manner:
+
+    class MyRegistry(Registry):
+        pass
+
+    I want to have the syntax in example registry available
+
+    ... needs some more thought
+    '''
+    BaseClass = None
 
 
-class Registry(object):
+class ExampleRegistry(Registry.BaseClass):
+    def classHandling(self, whatever):
+        pass
+
+
+class oldRegistry(object):
     records_functions = True
     records_classes = False
     registries = defaultdict(lambda: {})
