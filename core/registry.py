@@ -83,6 +83,13 @@ class ExampleRegistry(Registry.BaseClass):
     def classHandling(self, whatever):
         pass
 
+    def funcSetup(self, func):
+        self.func = func
+        self.arginfo = arginfo(func)
+
+    def __call__(self, *args):
+        pass
+
 
 class oldRegistry(object):
     records_functions = True
