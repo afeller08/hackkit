@@ -65,30 +65,39 @@ def arginfo(function):
     return ArgInfo(args, defaults, argspec.varargs, argspec.keywords)
 
 
-class Registry(type):
+class Registry(object):
+    def __init__(self):
+        class RegistryHelper:
+            pass
+
+        class BaseClass:
+            pass
+
+        self.RegistryHelper = RegistryHelper
+        self.BaseClass = BaseClass
+
+    def __call__(self, handler):
+        pass
+
+
+my_registry = Registry()
+
+
+@my_registry
+def handler(func, name, argspec, cls, registry):
     '''
-    Typically, you use in the following manner:
+    Takes a function and a description of its args, plus the cls
+    it's attached to if any.
 
-    class MyRegistry(Registry):
-        pass
+    Returns either None or a function that takes the args as an
+    input and returns a modified arglist.
 
-    I want to have the syntax in example registry available
+    Eventually I'd like it to request descriptions of other functions
+    in the arglist.
 
-    ... needs some more thought
+    Do I need for it to be part of a class or can I just decorate the
+    function. I think I can just decorate it.
     '''
-    BaseClass = None
-
-
-class ExampleRegistry(Registry.BaseClass):
-    def classHandling(self, whatever):
-        pass
-
-    def funcSetup(self, func):
-        self.func = func
-        self.arginfo = arginfo(func)
-
-    def __call__(self, *args):
-        pass
 
 
 class oldRegistry(object):
