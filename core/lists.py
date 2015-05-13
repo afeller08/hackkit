@@ -1,4 +1,4 @@
-import slightly
+import hackkit.helpers.slightly
 
 
 class Ordered(list):

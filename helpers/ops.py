@@ -1,4 +1,3 @@
-from collections import defaultdict
 arith = [
     'add', 'sub',
     'mul', 'div', 'truediv', 'mod', 'floordiv',
@@ -8,25 +7,25 @@ arith = [
 
 arithmetic = tuple([m + op for op in arith for m in ['', 'i', 'r']])
 
-inplace_arith = defaultdict(
-    [('__{0}__'.format(op), '__i{0}__'.format(op)) for op in arith], None
+inplace_arith = dict(
+    [('__{0}__'.format(op), '__i{0}__'.format(op)) for op in arith]
 )
 
-outplace_arith = defaultdict(
-    [('__i{0}__'.format(op), '__{0}__'.format(op)) for op in arith], None
+outplace_arith = dict(
+    [('__i{0}__'.format(op), '__{0}__'.format(op)) for op in arith]
 )
 
-normal_arith = defaultdict(
+normal_arith = dict(
     [('__i{0}__'.format(op), '__{0}__'.format(op)) for op in arith] +
-    [('__r{0}__'.format(op), '__{0}__'.format(op)) for op in arith], None
+    [('__r{0}__'.format(op), '__{0}__'.format(op)) for op in arith]
 )
 
-left_arith = defaultdict(
-    [('__r{0}__'.format(op), '__{0}__'.format(op)) for op in arith], None
+left_arith = dict(
+    [('__r{0}__'.format(op), '__{0}__'.format(op)) for op in arith]
 )
 
-right_arith = defaultdict(
-    [('__{0}__'.format(op), '__r{0}__'.format(op)) for op in arith], None
+right_arith = dict(
+    [('__{0}__'.format(op), '__r{0}__'.format(op)) for op in arith]
 )
 
 object = (
