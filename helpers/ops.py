@@ -1,3 +1,6 @@
+def full(ops):
+    return set(['__{0}__'.format(op) for op in ops])
+
 arith = [
     'add', 'sub',
     'mul', 'div', 'truediv', 'mod', 'floordiv',
@@ -20,6 +23,7 @@ normal_arith = dict(
     [('__r{0}__'.format(op), '__{0}__'.format(op)) for op in arith]
 )
 
+
 left_arith = dict(
     [('__r{0}__'.format(op), '__{0}__'.format(op)) for op in arith]
 )
@@ -27,6 +31,7 @@ left_arith = dict(
 right_arith = dict(
     [('__{0}__'.format(op), '__r{0}__'.format(op)) for op in arith]
 )
+
 
 object = (
     'new', 'init', 'del',
@@ -66,7 +71,7 @@ iterator = (
 )
 
 coersion = (
-    'coerce',
+    'coerce', 'trunc',
 )
 
 context = ('enter', 'exit')
