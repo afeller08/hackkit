@@ -1,12 +1,12 @@
 import ops
-import func_tools
+import functools
 
 def sic(func):
     func._hackkit_slightly__sic = True
     return func
 
 
-def _prettier_dict(dictionary, bases)
+def _prettier_dict(dictionary, bases):
     dict = {}
     inheritance = set()
     map(inheritance.union, [dir(x) for x in bases])
@@ -28,7 +28,7 @@ def prettier(name, bases, dictionary, type=type):
 
 
 class Prettier(type):
-    def __call__(name, bases, dict):
+    def __new__(cls, name, bases, dict):
         return prettier(name, bases, dict)
 
 
@@ -77,7 +77,7 @@ def inferred(name, bases, dict, type=type):
             return 1 / (other/self)
         dict['__div__'] = __div__
     if '__div__' in dict and not '__truediv__' in dict:
-        dict['___truediv__'] = dict['_div__']
+        dict['__truediv__'] = dict['__div__']
     if '__rdiv__' in dict and not '__rtruediv__' in dict:
         dict['___rtruediv__'] = dict['_rdiv__']
     if '__truediv__' in dict and not '__div__' in dict:
@@ -108,11 +108,15 @@ def inferred(name, bases, dict, type=type):
         def __rshift__(self, other):
             return self << -other
         dict['__rshift__'] = __rshift__
-    return func_tools.total_ordering(type(name, bases, dict))
+    eqops = set(ops.full(ops.comparison))
+    if '__eq__' in dict and len(set(dict.keys()).intersection(eqops)) > 1:
+        return functools.total_ordering(type(name, bases, dict))
+    else:
+        return type(name, bases, dict)
 
 
 class Inferred(type):
-    def __call__(name, bases, dict):
+    def __new__(cls, name, bases, dict):
         return inferred(name, bases, dict)
 
 
@@ -129,12 +133,12 @@ def less_verbose(cls):
     return cls
 
 
-def refined(name, bases, dictionary, type=type)
+def refined(name, bases, dictionary, type=type):
     dict = _prettier_dict(dictionary, bases)
     cls = prettier(name, bases, dictionary, inferred)
     return less_verbose(cls)
 
 
 class Refined(type):
-    def __call__(name, bases, dict):
+    def __new__(cls, name, bases, dict):
         return refined(name, bases, dict)

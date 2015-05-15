@@ -1,6 +1,5 @@
 import hackkit.helpers.slightly
 
-
 class Ordered(list):
     '''
     Not meant to subclass other derivatives of list.
@@ -42,10 +41,6 @@ class Ordered(list):
             combined.append(J[j])
             j += 1
         return Ordered(combined, _sorted=True)
-
-    def __iadd__(self, other):
-        list.__init__(self, self + other)
-        return self
 
     def intersects(self, other, **kwargs):
         intersection = None

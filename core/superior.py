@@ -16,8 +16,8 @@ found in the registry so that the following sentax would be supported.
 class Subclass(Base):
     def __add__(self, super, other):
         return  super + Subclass(other)
-    def __imul__(self, super, other):
-        super *= Subclass(other)
+    def __imul__(self, superior, other):
+        superior *= Subclass(other)
         return self
     def __sub__(self, other):
         return self.something_inherited - self.preprocess(other)
